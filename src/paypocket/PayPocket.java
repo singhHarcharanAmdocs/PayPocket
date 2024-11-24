@@ -14,11 +14,17 @@ public class PayPocket {
 
     
     public static void main(String[] args) {
-         Scanner scan = new Scanner(System.in);
-        
+        PayPocket app = new PayPocket();
+        app.startApp(); 
+      
+    }
+   
+    public void startApp(){
+           Scanner scan = new Scanner(System.in);
+        while(true){
         System.out.println("welcome to PayPocket");
         System.out.println("For Signup press 1 and For Signin Press 2");
-        
+         System.out.println("To Exit press 8");
      
      
        String checkuser = scan.nextLine();
@@ -52,16 +58,22 @@ public class PayPocket {
        createUser.checkUser(userName, passWord);
             
        }
-       else if(checkuser.equals("3")){
+       else if(checkuser.equals("4")){
            CreateUser createUser = new CreateUser();
            createUser.selectquery();
            
        }
+       else if (checkuser.equals("8")) {
+                System.out.println("Thank you for using PayPocket! Goodbye!");
+                break; // Exit the loop and terminate the application
+            }
+       
        else{
            System.out.println("Invalid choice. Please restart the application.");
        }
-        scan.close();
+       
     }
-   
+        
+}
     
 }
