@@ -1,20 +1,9 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package paypocket;
 
 import java.sql.ResultSet;
 import java.util.Scanner;
 
 public class CreateUser {
-
-     private boolean isPasswordValid(String password) {
-        // Corrected regular expression for password validation
-        String passwordPattern = "^(?=.[A-Z])(?=.\\d)(?=.*[@#$%^&+=!]).{8,}$";
-        return password.matches(passwordPattern);
-    }
-
 
     public void addUser(String userName, String password) {
         Scanner scan = new Scanner(System.in);
@@ -52,28 +41,39 @@ public class CreateUser {
         }
     }
 
-//    public void addUser(String userName, String password) {
-//
-//        try {
-//            String sql = "INSERT INTO users (username, password , account_balance) VALUES (?, ?,?)";
-//            int rows = DBLoader.executeUpdate(sql, userName, password,0);
-//
-//            System.out.println(rows + " user created.");
-//            Scanner scan = new Scanner(System.in);
-//
-//            System.out.println("welcome user");
-//            System.out.println("Enter Username");
-//
-//            String name = scan.nextLine();
-//
-//            System.out.println("Enter password");
-//            String pass = scan.nextLine();
-//            checkUser(name, pass);
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
+    public static boolean isPasswordValid(String password) {
+
+        boolean specialChar = false;
+        boolean digit = false;
+        boolean capitalLetter = false;
+        boolean smallLetter = false;
+
+        //Checks each character to see if it is acceptable.
+        for (int i = 0; i < password.length(); i++) {
+            char c = password.charAt(i);
+
+            if (c >= 'a' && c <= 'z') {
+                smallLetter = true;
+            } else if (c >= 'A' && c <= 'Z') {
+                capitalLetter = true;
+            } else if (c >= '0' && c <= '9') {
+                digit = true;
+            } else {
+                specialChar = true;
+            }
+        }
+
+        if (!specialChar || !digit || !smallLetter || !capitalLetter || password.length() < 8) {
+            return false;
+        } else {
+            // if the password is valid, tell the user it's accepted
+            System.out.println("Password Accepted");
+            return true;
+        }
+    }
+
+
+
     public void checkUser(String userName, String password) {
         int maxRetries = 3; // Maximum retry attempts allowed
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
