@@ -28,7 +28,8 @@ public class UserDashboard {
 
                 System.out.println("Logout              :        Press 5");
                 System.out.println("Book Tickets        :        Press 6");
-                System.out.println("View Bills          :        Press 7");
+                System.out.println("Pay Bills           :        Press 7");
+                
 
                 System.out.print("Enter your choice: ");
                 String input = scan.nextLine();
@@ -69,8 +70,8 @@ public class UserDashboard {
                         return; // Exit the loop after deleting the user
 
                     case 7:
-                        userViewBills(username);
-                        return; // Exit the loop after deleting the user
+                        payBill(username);
+                        break; // Exit the loop after deleting the user
 
                     default:
                         System.out.println("Invalid choice! Please enter a number between 1 and 5.");
@@ -234,25 +235,96 @@ public class UserDashboard {
         }
     }
 
-    public void userViewBills(String username) {
-        try {
-            ResultSet rs = DBLoader.executeQuery("SELECT * FROM bills where user_name = '"+username+"'");
-            while (rs.next()) {
-                String bill_name = rs.getString("bill_name");
-                String bill_cost = rs.getString("bill_cost");
-                String date = rs.getString("date_time");
-                
-                System.out.println("Pay your bills before time " );
-                System.out.println("Bill name: " + bill_name);
-                System.out.println("Bill cost: " + bill_cost);
-                System.out.println("end date: " + date);
-                System.out.println("----------------------------");
-            }
-        } catch (Exception e) {
-            System.out.println("Error retrieving users: " + e.getMessage());
-            e.printStackTrace();
+public void payBill(String username) {
+    Scanner sc = new Scanner(System.in);
+
+    try {
+        // Fetch and display bills for the user
+        ResultSet rs = DBLoader.executeQuery("SELECT * FROM bills WHERE user_name = '" + username + "'");
+        boolean hasBills = false;
+
+        System.out.println("\nYour Bills:");
+        while (rs.next()) {
+            hasBills = true;
+            String billId = rs.getString("id");
+            String billCost = rs.getString("bill_cost");
+            String date = rs.getString("date_time");
+
+            System.out.println("----------------------------");
+            System.out.println("Bill ID: " + billId);
+            System.out.println("Bill Cost: " + billCost);
+            System.out.println("Due Date: " + date);
         }
+
+        if (!hasBills) {
+            System.out.println("No pending bills to pay.");
+            return;
+        }
+
+        int billIdToPay = -1;
+        while (true) {
+            try {
+                System.out.println("\nEnter the ID of the bill you want to pay:");
+                billIdToPay = sc.nextInt();
+                sc.nextLine(); // Consume newline
+                if (billIdToPay <= 0) {
+                    System.out.println("Bill ID must be a positive number. Please try again.");
+                } else {
+                    break; // Valid input, exit the loop
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input! Please enter a numeric Bill ID.");
+                sc.nextLine(); // Clear invalid input
+            }
+        }
+
+        // Check if the bill exists and fetch its details
+        ResultSet billDetails = DBLoader.executeQuery("SELECT * FROM bills WHERE id = " + billIdToPay + " AND user_name = '" + username + "'");
+        if (!billDetails.next()) {
+            System.out.println("Invalid Bill ID or the bill does not belong to you!");
+            return;
+        }
+
+        double billCost = billDetails.getDouble("bill_cost");
+
+        // Fetch user's account balance
+        ResultSet userRs = DBLoader.executeQuery("SELECT account_balance FROM users WHERE username = '" + username + "'");
+        if (!userRs.next()) {
+            System.out.println("User not found!");
+            return;
+        }
+
+        double userBalance = userRs.getDouble("account_balance");
+
+        // Check if the user has sufficient balance
+        if (userBalance < billCost) {
+            System.out.println("Insufficient balance! Please add funds to your account.");
+            return;
+        }
+
+        // Deduct the bill cost from the user's balance
+        String updateBalanceSql = "UPDATE users SET account_balance = account_balance - ? WHERE username = ?";
+        int rowsAffected = DBLoader.executeUpdate(updateBalanceSql, billCost, username);
+
+        if (rowsAffected > 0) {
+            // Delete the bill from the bills table
+            String deleteBillSql = "DELETE FROM bills WHERE id = ?";
+            DBLoader.executeUpdate(deleteBillSql, billIdToPay);
+
+            System.out.println("Bill paid successfully!");
+            System.out.println("Amount deducted: " + billCost);
+            System.out.println("Remaining balance: " + (userBalance - billCost));
+        } else {
+            System.out.println("Failed to update user balance. Bill payment unsuccessful.");
+        }
+
+    } catch (Exception e) {
+        System.out.println("An error occurred while paying the bill: " + e.getMessage());
+        e.printStackTrace();
     }
+}
+
+
 
     private void viewAvailableShows() {
         try ( Connection con = connect()) {
