@@ -97,18 +97,18 @@ public class AdminOperations {
 
         System.out.println("Enter City:");
         String city = sc.nextLine();
-        
-        System.out.println("Enter Movie Time:");
+
+        System.out.println("Enter Movie Time (format: YYYY-MM-DD HH:MM:SS):");
         String time = sc.nextLine();
 
         try ( Connection con = connect()) {
-            String sql = "INSERT INTO movie_shows (show_name, ticket_cost, seats_left, city, show_time) VALUES (?, ?, ?, ?,?)";
+            String sql = "INSERT INTO movie_shows (show_name, ticket_cost, seats_left, city, show_time) VALUES (?, ?, ?, ?, ?)";
             PreparedStatement pst = con.prepareStatement(sql);
             pst.setString(1, showName);
             pst.setDouble(2, ticketCost);
             pst.setInt(3, seatsLeft);
             pst.setString(4, city);
-             pst.setString(5, time);
+            pst.setString(5, time);  // Make sure the input matches the correct format
 
             int rows = pst.executeUpdate();
             if (rows > 0) {
@@ -168,7 +168,7 @@ public class AdminOperations {
             ResultSet rs = stmt.executeQuery(sql);
 
             System.out.println("\n========== Movie Shows ==========");
-            System.out.printf("%-5s %-20s %-10s %-15s %-20s\n", "ID", "Show Name", "Cost", "Seats Left", "City");
+            System.out.printf("%-5s %-20s %-10s %-15s %-20s %-20s\n", "ID", "Show Name", "Cost", "Seats Left", "City" , "show_time");
             System.out.println("------------------------------------------------------------");
 
             while (rs.next()) {
@@ -177,8 +177,9 @@ public class AdminOperations {
                 double ticketCost = rs.getDouble("ticket_cost");
                 int seatsLeft = rs.getInt("seats_left");
                 String city = rs.getString("city");
+                    String time = rs.getString("show_time");
 
-                System.out.printf("%-5d %-20s %-10.2f %-15d %-20s\n", id, showName, ticketCost, seatsLeft, city);
+                System.out.printf("%-5d %-20s %-10.2f %-15d %-20s %-20s\n", id, showName, ticketCost, seatsLeft, city, time);
             }
 
         } catch (Exception e) {
