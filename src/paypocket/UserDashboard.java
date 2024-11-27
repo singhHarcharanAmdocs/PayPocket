@@ -236,7 +236,7 @@ public class UserDashboard {
             ResultSet rs = stmt.executeQuery(sql);
 
             System.out.println("\n========== Available Movie Shows ==========");
-            System.out.printf("%-5s %-20s %-10s %-15s %-20s\n", "ID", "Show Name", "Cost", "Seats Left", "City");
+            System.out.printf("%-5s %-20s %-10s %-15s %-20s %-20s\n", "ID", "Show Name", "Cost", "Seats Left", "City", "show_time");
             System.out.println("------------------------------------------------------------");
 
             while (rs.next()) {
@@ -245,8 +245,9 @@ public class UserDashboard {
                 double ticketCost = rs.getDouble("ticket_cost");
                 int seatsLeft = rs.getInt("seats_left");
                 String city = rs.getString("city");
+                String time = rs.getString("show_time");
 
-                System.out.printf("%-5d %-20s %-10.2f %-15d %-20s\n", id, showName, ticketCost, seatsLeft, city);
+                System.out.printf("%-5d %-20s %-10.2f %-15d %-20s %-20s\n", id, showName, ticketCost, seatsLeft, city, time);
             }
 
         } catch (Exception e) {
@@ -384,8 +385,9 @@ public class UserDashboard {
             pstTransaction.setInt(2, showId);
             pstTransaction.setString(3, showName);
             pstTransaction.setDouble(4, ticketCost);
-            pstTransaction.setString(5, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            pstTransaction.setTimestamp(5, Timestamp.valueOf(LocalDateTime.now())); // Correctly bind timestamp
             pstTransaction.executeUpdate();
+
             System.out.println("Ticket booked successfully for " + showName + "!");
             System.out.println("Amount deducted: " + ticketCost);
             System.out.println("Remaining balance: " + (userBalance - ticketCost));
