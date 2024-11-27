@@ -28,6 +28,7 @@ public class UserDashboard {
 
                 System.out.println("Logout              :        Press 5");
                 System.out.println("Book Tickets        :        Press 6");
+                System.out.println("View Bills          :        Press 7");
 
                 System.out.print("Enter your choice: ");
                 String input = scan.nextLine();
@@ -65,6 +66,10 @@ public class UserDashboard {
 
                     case 6:
                         userMenu(username);
+                        return; // Exit the loop after deleting the user
+
+                    case 7:
+                        userViewBills(username);
                         return; // Exit the loop after deleting the user
 
                     default:
@@ -229,6 +234,26 @@ public class UserDashboard {
         }
     }
 
+    public void userViewBills(String username) {
+        try {
+            ResultSet rs = DBLoader.executeQuery("SELECT * FROM bills where user_name = '"+username+"'");
+            while (rs.next()) {
+                String bill_name = rs.getString("bill_name");
+                String bill_cost = rs.getString("bill_cost");
+                String date = rs.getString("date_time");
+                
+                System.out.println("Pay your bills before time " );
+                System.out.println("Bill name: " + bill_name);
+                System.out.println("Bill cost: " + bill_cost);
+                System.out.println("end date: " + date);
+                System.out.println("----------------------------");
+            }
+        } catch (Exception e) {
+            System.out.println("Error retrieving users: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     private void viewAvailableShows() {
         try ( Connection con = connect()) {
             String sql = "SELECT * FROM movie_shows";
@@ -257,7 +282,6 @@ public class UserDashboard {
 
     public void userMenu(String username) throws Exception {
         Scanner sc = new Scanner(System.in);
-
         while (true) {
             System.out.println("\n========== User Dashboard ==========");
             System.out.println("1. View Available Movie Shows");
@@ -386,6 +410,7 @@ public class UserDashboard {
             pstTransaction.setString(3, showName);
             pstTransaction.setDouble(4, ticketCost);
             pstTransaction.setTimestamp(5, Timestamp.valueOf(LocalDateTime.now())); // Correctly bind timestamp
+
             pstTransaction.executeUpdate();
 
             System.out.println("Ticket booked successfully for " + showName + "!");
@@ -453,4 +478,5 @@ public class UserDashboard {
             System.out.println("An error occurred while retrieving your bookings: " + e.getMessage());
         }
     }
+
 }
