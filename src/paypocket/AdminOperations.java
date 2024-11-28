@@ -43,15 +43,13 @@ public class AdminOperations {
             System.out.println("2. View all bookings");
             System.out.println("3. Add a New Movie Show");
             System.out.println("4. Delete a Movie Show");
-//            System.out.println("5. Change Password");
             System.out.println("5. Logout");
             System.out.print("Enter your choice: ");
 
             int choice;
             try {
-                // Read input and handle non-integer values
                 String input = sc.nextLine();
-                choice = Integer.parseInt(input); // Try parsing the input as an integer
+                choice = Integer.parseInt(input); 
             } catch (NumberFormatException e) {
                 System.out.println("Invalid input! Please enter a number corresponding to the menu options.");
                 continue; // Restart the loop if input is invalid
@@ -70,7 +68,6 @@ public class AdminOperations {
                 case 4:
                     deleteMovieShow();
                     break;
-
                 case 5:
                     System.out.println("Logged out successfully!");
                     PayPocket app = new PayPocket();
@@ -84,32 +81,65 @@ public class AdminOperations {
 
     private void addMovieShow() {
         Scanner sc = new Scanner(System.in);
-
+    
         System.out.println("\nEnter Show Name:");
         String showName = sc.nextLine();
-
-        System.out.println("Enter Ticket Cost:");
-        double ticketCost = sc.nextDouble();
-
-        System.out.println("Enter Number of Seats :");
-        int seatsLeft = sc.nextInt();
-        sc.nextLine(); // Consume newline
-
+    
+        double ticketCost;
+        while (true) {
+            try {
+                System.out.println("Enter Ticket Cost:");
+                String input = sc.nextLine().trim();
+                if (input.isEmpty()) {
+                    throw new IllegalArgumentException("Ticket cost cannot be empty!");
+                }
+                ticketCost = Double.parseDouble(input);
+                if (ticketCost <= 0) {
+                    throw new IllegalArgumentException("Ticket cost must be a positive number!");
+                }
+                break; // Exit loop if input is valid
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input! Please enter a numeric value for ticket cost.");
+            } catch (IllegalArgumentException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    
+        int seatsLeft;
+        while (true) {
+            try {
+                System.out.println("Enter Number of Seats:");
+                String input = sc.nextLine().trim();
+                if (input.isEmpty()) {
+                    throw new IllegalArgumentException("Number of seats cannot be empty!");
+                }
+                seatsLeft = Integer.parseInt(input);
+                if (seatsLeft <= 0) {
+                    throw new IllegalArgumentException("Number of seats must be a positive integer!");
+                }
+                break; // Exit loop if input is valid
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input! Please enter a numeric value for the number of seats.");
+            } catch (IllegalArgumentException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    
         System.out.println("Enter City:");
         String city = sc.nextLine();
-
+    
         System.out.println("Enter Movie Time (format: YYYY-MM-DD HH:MM:SS):");
         String time = sc.nextLine();
-
-        try ( Connection con = connect()) {
+    
+        try (Connection con = connect()) {
             String sql = "INSERT INTO movie_shows (show_name, ticket_cost, seats_left, city, show_time) VALUES (?, ?, ?, ?, ?)";
             PreparedStatement pst = con.prepareStatement(sql);
             pst.setString(1, showName);
             pst.setDouble(2, ticketCost);
             pst.setInt(3, seatsLeft);
             pst.setString(4, city);
-            pst.setString(5, time);  // Make sure the input matches the correct format
-
+            pst.setString(5, time); // Make sure the input matches the correct format
+    
             int rows = pst.executeUpdate();
             if (rows > 0) {
                 System.out.println("Movie show added successfully!");
@@ -117,9 +147,11 @@ public class AdminOperations {
                 System.out.println("Failed to add movie show.");
             }
         } catch (Exception e) {
+            System.out.println("An error occurred while adding the movie show: " + e.getMessage());
             e.printStackTrace();
         }
     }
+
 
     private void deleteMovieShow() {
         Scanner sc = new Scanner(System.in);
@@ -168,7 +200,7 @@ public class AdminOperations {
             ResultSet rs = stmt.executeQuery(sql);
 
             System.out.println("\n========== Movie Shows ==========");
-            System.out.printf("%-5s %-20s %-10s %-15s %-20s %-20s\n", "ID", "Show Name", "Cost", "Seats Left", "City" , "show_time");
+            System.out.printf("%-5s %-30s %-10s %-15s %-20s %-20s\n", "ID", "Show Name", "Cost", "Seats Left", "City" , "show_time");
             System.out.println("------------------------------------------------------------");
 
             while (rs.next()) {
@@ -177,9 +209,9 @@ public class AdminOperations {
                 double ticketCost = rs.getDouble("ticket_cost");
                 int seatsLeft = rs.getInt("seats_left");
                 String city = rs.getString("city");
-                    String time = rs.getString("show_time");
+                String time = rs.getString("show_time");
 
-                System.out.printf("%-5d %-20s %-10.2f %-15d %-20s %-20s\n", id, showName, ticketCost, seatsLeft, city, time);
+                System.out.printf("%-5d %-30s %-10.2f %-15d %-20s %-20s\n", id, showName, ticketCost, seatsLeft, city, time);
             }
 
         } catch (Exception e) {
@@ -187,32 +219,7 @@ public class AdminOperations {
         }
     }
 
-//    private void changePassword(String username) {
-//        Scanner sc = new Scanner(System.in);
-//
-//        System.out.println("\nEnter Current Password:");
-//        String currentPassword = sc.nextLine();
-//
-//        System.out.println("Enter New Password:");
-//        String newPassword = sc.nextLine();
-//
-//        try ( Connection con = connect()) {
-//            String sql = "UPDATE admin_table SET admin_password = ? WHERE admin_username = ? AND admin_password = ?";
-//            PreparedStatement pst = con.prepareStatement(sql);
-//          
-//            pst.setString(1, username);
-//            pst.setString(2, newPassword);
-//
-//            int rows = pst.executeUpdate();
-//            if (rows > 0) {
-//                System.out.println("Password changed successfully!");
-//            } else {
-//                System.out.println("Current password is incorrect!");
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
+
     private void viewAllBookings() throws Exception {
         try ( Connection con = connect()) {
             // Query to retrieve all transactions
