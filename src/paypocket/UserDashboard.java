@@ -248,10 +248,12 @@ public void payBill(String username) {
             hasBills = true;
             String billId = rs.getString("id");
             String billCost = rs.getString("bill_cost");
+            String billname = rs.getString("bill_name");
             String date = rs.getString("date_time");
 
             System.out.println("----------------------------");
             System.out.println("Bill ID: " + billId);
+             System.out.println("Bill Type: " + billname);
             System.out.println("Bill Cost: " + billCost);
             System.out.println("Due Date: " + date);
         }
@@ -396,104 +398,130 @@ public void payBill(String username) {
         }
     }
 
-    private void bookTicket(String username) {
-        Scanner sc = new Scanner(System.in);
+private void bookTicket(String username) {
+    Scanner sc = new Scanner(System.in);
 
-        try ( Connection con = connect()) {
-            // View available shows
-            viewAvailableShows();
+    try (Connection con = connect()) {
+        // View available shows
+        viewAvailableShows();
 
-            int showId;
-            while (true) {
-                try {
-                    System.out.println("\nEnter the ID of the show you want to book (numeric only):");
-                    String input = sc.nextLine().trim(); // Read and trim input
-                    if (input.isEmpty()) {
-                        throw new IllegalArgumentException("Input cannot be empty!");
-                    }
-                    showId = Integer.parseInt(input); // Try parsing input as integer
-                    if (showId <= 0) {
-                        throw new IllegalArgumentException("Show ID must be a positive number!");
-                    }
-                    break; // Exit loop if parsing succeeds and input is valid
-                } catch (NumberFormatException e) {
-                    System.out.println("Invalid input! Please enter a numeric value.");
-                } catch (IllegalArgumentException e) {
-                    System.out.println(e.getMessage()); // Handle empty or invalid numeric ranges
+        int showId;
+        while (true) {
+            try {
+                System.out.println("\nEnter the ID of the show you want to book (numeric only):");
+                String input = sc.nextLine().trim(); // Read and trim input
+                if (input.isEmpty()) {
+                    throw new IllegalArgumentException("Input cannot be empty!");
                 }
+                showId = Integer.parseInt(input); // Try parsing input as integer
+                if (showId <= 0) {
+                    throw new IllegalArgumentException("Show ID must be a positive number!");
+                }
+                break; // Exit loop if parsing succeeds and input is valid
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input! Please enter a numeric value.");
+            } catch (IllegalArgumentException e) {
+                System.out.println(e.getMessage()); // Handle empty or invalid numeric ranges
             }
-
-            String getShowSql = "SELECT * FROM movie_shows WHERE id = ?";
-            PreparedStatement pstShow = con.prepareStatement(getShowSql);
-            pstShow.setInt(1, showId);
-            ResultSet rsShow = pstShow.executeQuery();
-
-            if (!rsShow.next()) {
-                System.out.println("Invalid show ID! Please try again.");
-                return;
-            }
-
-            String showName = rsShow.getString("show_name");
-            double ticketCost = rsShow.getDouble("ticket_cost");
-            int seatsLeft = rsShow.getInt("seats_left");
-
-            if (seatsLeft <= 0) {
-                System.out.println("No seats left for this show!");
-                return;
-            }
-
-            // Get user's balance
-            String getUserSql = "SELECT account_balance FROM users WHERE username = ?";
-            PreparedStatement pstUser = con.prepareStatement(getUserSql);
-            pstUser.setString(1, username);
-            ResultSet rsUser = pstUser.executeQuery();
-
-            if (!rsUser.next()) {
-                System.out.println("User not found!");
-                return;
-            }
-
-            double userBalance = rsUser.getDouble("account_balance");
-
-            if (userBalance < ticketCost) {
-                System.out.println("Insufficient balance! Please add funds.");
-                return;
-            }
-
-            // Deduct ticket cost from user's balance
-            String updateUserBalanceSql = "UPDATE users SET account_balance = ? WHERE username = ?";
-            PreparedStatement pstUpdateUser = con.prepareStatement(updateUserBalanceSql);
-            pstUpdateUser.setDouble(1, userBalance - ticketCost);
-            pstUpdateUser.setString(2, username);
-            pstUpdateUser.executeUpdate();
-
-            // Reduce seats left in movie_shows
-            String updateSeatsSql = "UPDATE movie_shows SET seats_left = ? WHERE id = ?";
-            PreparedStatement pstUpdateSeats = con.prepareStatement(updateSeatsSql);
-            pstUpdateSeats.setInt(1, seatsLeft - 1);
-            pstUpdateSeats.setInt(2, showId);
-            pstUpdateSeats.executeUpdate();
-
-            // Record the transaction
-            String transactionSql = "INSERT INTO transactions (username, show_id, show_name, cost, date_time) VALUES (?, ?, ?, ?, ?)";
-            PreparedStatement pstTransaction = con.prepareStatement(transactionSql);
-            pstTransaction.setString(1, username);
-            pstTransaction.setInt(2, showId);
-            pstTransaction.setString(3, showName);
-            pstTransaction.setDouble(4, ticketCost);
-            pstTransaction.setTimestamp(5, Timestamp.valueOf(LocalDateTime.now())); // Correctly bind timestamp
-
-            pstTransaction.executeUpdate();
-
-            System.out.println("Ticket booked successfully for " + showName + "!");
-            System.out.println("Amount deducted: " + ticketCost);
-            System.out.println("Remaining balance: " + (userBalance - ticketCost));
-
-        } catch (Exception e) {
-            System.out.println("An error occurred while booking the ticket: " + e.getMessage());
-            e.printStackTrace();
         }
+
+        String getShowSql = "SELECT * FROM movie_shows WHERE id = ?";
+        PreparedStatement pstShow = con.prepareStatement(getShowSql);
+        pstShow.setInt(1, showId);
+        ResultSet rsShow = pstShow.executeQuery();
+
+        if (!rsShow.next()) {
+            System.out.println("Invalid show ID! Please try again.");
+            return;
+        }
+
+        String showName = rsShow.getString("show_name");
+        double ticketCost = rsShow.getDouble("ticket_cost");
+        int seatsLeft = rsShow.getInt("seats_left");
+
+        if (seatsLeft <= 0) {
+            System.out.println("No seats left for this show!");
+            return;
+        }
+
+        // Get user's balance
+        String getUserSql = "SELECT account_balance FROM users WHERE username = ?";
+        PreparedStatement pstUser = con.prepareStatement(getUserSql);
+        pstUser.setString(1, username);
+        ResultSet rsUser = pstUser.executeQuery();
+
+        if (!rsUser.next()) {
+            System.out.println("User not found!");
+            return;
+        }
+
+        double userBalance = rsUser.getDouble("account_balance");
+
+        int numTickets;
+        while (true) {
+            try {
+                System.out.println("Enter the number of tickets you want to book (numeric only):");
+                String input = sc.nextLine().trim(); // Read and trim input
+                if (input.isEmpty()) {
+                    throw new IllegalArgumentException("Input cannot be empty!");
+                }
+                numTickets = Integer.parseInt(input); // Try parsing input as integer
+                if (numTickets <= 0) {
+                    throw new IllegalArgumentException("Number of tickets must be a positive integer!");
+                }
+                if (numTickets > seatsLeft) {
+                    throw new IllegalArgumentException("Only " + seatsLeft + " seats are available for this show.");
+                }
+                if (numTickets * ticketCost > userBalance) {
+                    throw new IllegalArgumentException("Insufficient balance! You need at least " 
+                        + (numTickets * ticketCost) + " to book " + numTickets + " tickets.");
+                }
+                break; // Exit loop if input is valid
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input! Please enter a numeric value.");
+            } catch (IllegalArgumentException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+
+        double totalCost = numTickets * ticketCost;
+
+        // Deduct total ticket cost from user's balance
+        String updateUserBalanceSql = "UPDATE users SET account_balance = ? WHERE username = ?";
+        PreparedStatement pstUpdateUser = con.prepareStatement(updateUserBalanceSql);
+        pstUpdateUser.setDouble(1, userBalance - totalCost);
+        pstUpdateUser.setString(2, username);
+        pstUpdateUser.executeUpdate();
+
+        // Reduce seats left in movie_shows
+        String updateSeatsSql = "UPDATE movie_shows SET seats_left = ? WHERE id = ?";
+        PreparedStatement pstUpdateSeats = con.prepareStatement(updateSeatsSql);
+        pstUpdateSeats.setInt(1, seatsLeft - numTickets);
+        pstUpdateSeats.setInt(2, showId);
+        pstUpdateSeats.executeUpdate();
+
+        // Record the transaction
+        String transactionSql = "INSERT INTO transactions (username, show_id, show_name, cost, date_time,booked_seats) VALUES (?, ?, ?, ?, ?,?)";
+        PreparedStatement pstTransaction = con.prepareStatement(transactionSql);
+        pstTransaction.setString(1, username);
+        pstTransaction.setInt(2, showId);
+        pstTransaction.setString(3, showName);
+        pstTransaction.setDouble(4, totalCost);
+        pstTransaction.setInt(6, numTickets);
+        pstTransaction.setTimestamp(5, Timestamp.valueOf(LocalDateTime.now())); // Correctly bind timestamp
+
+        pstTransaction.executeUpdate();
+
+        System.out.println("Ticket(s) booked successfully for " + showName + "!");
+        System.out.println("Number of tickets booked: " + numTickets);
+        System.out.println("Total amount deducted: " + totalCost);
+        System.out.println("Remaining balance: " + (userBalance - totalCost));
+
+    } catch (Exception e) {
+        System.out.println("An error occurred while booking the ticket(s): " + e.getMessage());
+        e.printStackTrace();
     }
+}
 
     private void checkBalance(String username) {
         try ( Connection con = connect()) {
@@ -529,17 +557,19 @@ public void payBill(String username) {
                 }
 
                 // Display the bookings
-                System.out.println("\nYour booked tickets:");
+                System.out.println("\nYour Booking Details");
 
                 // Iterate through the result set and print booking details
                 do {
                     int showId = rs.getInt("show_id");
+                    int bookedtickets = rs.getInt("booked_seats");
                     String showName = rs.getString("show_name");
                     double cost = rs.getDouble("cost");
                     String dateTime = rs.getString("date_time");
 
                     System.out.println("Show ID: " + showId);
                     System.out.println("Show Name: " + showName);
+                     System.out.println("Booked seats: " + bookedtickets);
                     System.out.println("Ticket Cost: " + cost);
                     System.out.println("Booking Date & Time: " + dateTime);
                     System.out.println("------------------------------------------");
