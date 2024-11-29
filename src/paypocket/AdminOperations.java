@@ -27,8 +27,12 @@ public class AdminOperations {
 
             ResultSet rs = pst.executeQuery();
             return rs.next(); // Return true if credentials match
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (SQLException e) {
+            System.out.println("Database Error: " + e.getMessage());
+        }catch (ClassNotFoundException e) {
+            System.out.println("Driver Not Found: " + e.getMessage());
+        }catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
         }
 
         return false;
@@ -146,9 +150,13 @@ public class AdminOperations {
             } else {
                 System.out.println("Failed to add movie show.");
             }
-        } catch (Exception e) {
+        }catch (SQLException e) {
+            System.out.println("Database Error: " + e.getMessage());
+        }catch (ClassNotFoundException e) {
+            System.out.println("Driver Not Found: " + e.getMessage());
+        }catch (Exception e) {
             System.out.println("An error occurred while adding the movie show: " + e.getMessage());
-            e.printStackTrace();
+            
         }
     }
 
@@ -187,7 +195,11 @@ public class AdminOperations {
             } else {
                 System.out.println("No movie show found with the given ID.");
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
+            System.out.println("Database Error: " + e.getMessage());
+        }catch (ClassNotFoundException e) {
+            System.out.println("Driver Not Found: " + e.getMessage());
+        }catch (Exception e) {
             System.out.println("An error occurred while deleting the movie show: " + e.getMessage());
             e.printStackTrace();
         }
@@ -200,7 +212,7 @@ public class AdminOperations {
             ResultSet rs = stmt.executeQuery(sql);
 
             System.out.println("\n========== Movie Shows ==========");
-            System.out.printf("%-5s %-30s %-10s %-15s %-20s %-20s\n", "ID", "Show Name", "Cost", "Seats Left", "City" , "show_time");
+            System.out.printf("%-5s %-50s %-10s %-15s %-20s %-20s\n", "ID", "Show Name", "Cost", "Seats Left", "City" , "show_time");
             System.out.println("------------------------------------------------------------");
 
             while (rs.next()) {
@@ -211,11 +223,15 @@ public class AdminOperations {
                 String city = rs.getString("city");
                 String time = rs.getString("show_time");
 
-                System.out.printf("%-5d %-30s %-10.2f %-15d %-20s %-20s\n", id, showName, ticketCost, seatsLeft, city, time);
+                System.out.printf("%-5d %-50s %-10.2f %-15d %-20s %-20s\n", id, showName, ticketCost, seatsLeft, city, time);
             }
 
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (SQLException e) {
+            System.out.println("Database Error: " + e.getMessage());
+        }catch (ClassNotFoundException e) {
+            System.out.println("Driver Not Found: " + e.getMessage());
+        }catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
         }
     }
 
@@ -253,7 +269,11 @@ public class AdminOperations {
                 } while (rs.next());
             }
         } catch (SQLException e) {
-            System.out.println("An error occurred while retrieving bookings: " + e.getMessage());
+            System.out.println("Database Error: " + e.getMessage());
+        }catch (ClassNotFoundException e) {
+            System.out.println("Driver Not Found: " + e.getMessage());
+        }catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
         }
     }
 

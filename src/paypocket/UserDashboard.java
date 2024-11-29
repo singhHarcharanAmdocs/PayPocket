@@ -1,13 +1,8 @@
 package paypocket;
 
 import java.sql.*;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.util.InputMismatchException;
-import java.util.Scanner;
+import java.util.*;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 public class UserDashboard {
 
@@ -349,8 +344,12 @@ public void payBill(String username) {
                 System.out.printf("%-5d %-20s %-10.2f %-15d %-20s %-20s\n", id, showName, ticketCost, seatsLeft, city, time);
             }
 
-        } catch (Exception e) {
-            e.printStackTrace();
+        }catch (SQLException e) {
+            System.out.println("Database Error: " + e.getMessage());
+        }catch (ClassNotFoundException e) {
+            System.out.println("Driver Not Found: " + e.getMessage());
+        }catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
         }
     }
 
@@ -517,10 +516,15 @@ private void bookTicket(String username) {
         System.out.println("Total amount deducted: " + totalCost);
         System.out.println("Remaining balance: " + (userBalance - totalCost));
 
-    } catch (Exception e) {
+    } catch (SQLException e) {
+            System.out.println("Database Error: " + e.getMessage());
+        }catch (ClassNotFoundException e) {
+            System.out.println("Driver Not Found: " + e.getMessage());
+        }catch (Exception e) {
         System.out.println("An error occurred while booking the ticket(s): " + e.getMessage());
         e.printStackTrace();
     }
+    
 }
 
     private void checkBalance(String username) {
@@ -577,7 +581,11 @@ private void bookTicket(String username) {
 
             }
         } catch (SQLException e) {
-            System.out.println("An error occurred while retrieving your bookings: " + e.getMessage());
+            System.out.println("Database Error: " + e.getMessage());
+        }catch (ClassNotFoundException e) {
+            System.out.println("Driver Not Found: " + e.getMessage());
+        }catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
         }
     }
 
