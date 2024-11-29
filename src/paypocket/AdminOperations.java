@@ -1,3 +1,13 @@
+// DataBase tables
+
+// pay bill		    -> bill_id, username, bill_name, bill_cost, due_date
+// users			-> Username, password, balance
+// admin			-> admin_userName, admin_password
+// transactions	    -> transaction id, username, show_id, show_name, show_cost, date-time, countOfSeats, booked seats
+// movie_shows		-> show_id, show_name, show_cost, numberOfSeats, Date-time
+
+
+
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
